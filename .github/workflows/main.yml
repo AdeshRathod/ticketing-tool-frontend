@@ -1,0 +1,37 @@
+name: 🚀 dev-runner-main
+
+on:
+  #schedule:
+  #- cron: '30 18 * * *' # Runs every day at 6:30 PM UTC
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: 📦 Install dependencies
+        run: npm install --force
+
+      - name: 🏗️ Build
+        run: |
+          touch .env
+          echo "${{secrets.DEV_ENV_FILE}}" > .env
+          cat .env
+
+      - name: 🏗️ Build with increased memory
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144" # Setting memory limit here
+        run: |
+          npm run build
+
+      - name: 🚀 Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: build/

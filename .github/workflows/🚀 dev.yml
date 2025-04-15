@@ -1,0 +1,44 @@
+name: 🚀 new-dev-runner
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔄 Checkout code from dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev 
+
+      - name: 📦 Install dependencies
+        run: npm install --force
+
+      - name: 🏗️ Build
+        run: |
+          touch .env
+          echo "${{secrets.DEV_ENV_FILE}}" > .env
+          cat .env
+          npm run build
+
+      - name: 🚀 Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: build/
+
+  release_project:
+    name: "🚀 Release project"
+    runs-on: dev 
+    needs: build
+    steps:
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: static-site
+    
+      - name: 🧪 Test artifact download
+        run: |
+          ls -R
