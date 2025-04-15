@@ -208,6 +208,35 @@ const HRAdminDashboard = () => {
     }
     return tickets; // Default to "All tickets"
   };
+  const handleStatusChange = async (newStatus) => {
+    if (selectedTicket) {
+      try {
+        // Update the ticket status in the backend
+        await axios.put(`${process.env.REACT_APP_API}/route/ticket/status`, {
+          ticketId: selectedTicket.ticketId,
+          status: newStatus,
+          userId: adminId,
+        });
+
+        // Update the local state for the selected ticket
+        setSelectedTicket((prev) => ({ ...prev, status: newStatus }));
+
+        // Update the tickets list to reflect the new status
+        setTickets((prevTickets) =>
+          prevTickets.map((ticket) =>
+            ticket.ticketId === selectedTicket.ticketId
+              ? { ...ticket, status: newStatus }
+              : ticket
+          )
+        );
+
+        // Optionally, invalidate queries to refresh data
+        await queryClient.invalidateQueries(["tickets"]);
+      } catch (error) {
+        console.error("Error updating ticket status:", error);
+      }
+    }
+  };
 
   const handleSendReply = async () => {
     if (reply.trim()) {
@@ -531,13 +560,19 @@ const HRAdminDashboard = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center">
-                      To do
-                      <ChevronRightIcon className="w-4 h-4 ml-1" />
-                    </button>
-                    <button className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-sm">
-                      <ChevronRightIcon className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={selectedTicket?.status || "To Do"} // Default to "To Do" if no status is set
+                        onChange={(e) => handleStatusChange(e.target.value)} // Handle status change
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center cursor-pointer"
+                      >
+                        <option value="To Do">To Do</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                      <ChevronRightIcon className="w-4 h-4 ml-1 text-blue-600" />
+                    </div>
                   </div>
                 </div>
               </div>
